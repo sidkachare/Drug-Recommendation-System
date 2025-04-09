@@ -1,20 +1,24 @@
-import pickle
-import pandas as pd
+import joblib
+import re
+import string
 
-def recommend_drug(drug_name, model_path="models/drug_recommender.pkl"):
-    with open(model_path, "rb") as f:
-        tfidf, similarity_matrix, df = pickle.load(f)
+class InferenceEngine:
+    def __init__(self, model_path, vectorizer, drug_names):
+        self.model = joblib.load(model_path)
+        self.vectorizer = vectorizer
+        self.drug_names = drug_names
 
-    if drug_name not in df['drug_name'].values:
-        return "Drug not found!"
+    def clean_text(self, text):
+        text = text.lower()
+        text = re.sub(f"[{re.escape(string.punctuation)}]", "", text)
+        text = re.sub(r"\d+", "", text)
+        text = re.sub(r"\s+", " ", text)
+        return text.strip()
 
-    idx = df[df['drug_name'] == drug_name].index[0]
-    scores = list(enumerate(similarity_matrix[idx]))
-    scores = sorted(scores, key=lambda x: x[1], reverse=True)
-    top_drugs = [df.iloc[i[0]]['drug_name'] for i in scores[1:6]]
+    def recommend(self, side_effect_text, top_n=5):
+        cleaned = self.clean_text(side_effect_text)
+        query_vector = self.vectorizer.transform([cleaned])
+        distances, indices = self.model.kneighbors(query_vector, n_neighbors=top_n)
+        recommendations = [self.drug_names[idx] for idx in indices[0]]
+        return recommendations
 
-    return top_drugs
-
-# Test function
-if __name__ == "__main__":
-    print(recommend_drug("doxycycline"))
