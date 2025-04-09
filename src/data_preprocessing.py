@@ -22,14 +22,14 @@ class DataPreprocessor:
     def load_and_process(self):
         df = pd.read_csv(self.file_path)
         df.drop_duplicates(inplace=True)
-        df.dropna(subset=['medical_condition', 'side_effects', 'rating'], inplace=True)
+        df.dropna(subset=['side_effects', 'drug_name'], inplace=True)
 
         df['clean_side_effects'] = df['side_effects'].apply(self.clean_text)
 
         X_text = df['clean_side_effects']
-        y = df['rating']
 
-        X_features = self.vectorizer.fit_transform(X_text)
+        X_vectorized = self.vectorizer.fit_transform(X_text)
 
-        X_train, X_test, y_train, y_test = train_test_split(X_features, y, test_size=0.2, random_state=42)
-        return X_train, X_test, y_train, y_test, self.vectorizer
+        drug_names = df['drug_name'].values
+
+        return X_vectorized, drug_names, self.vectorizer

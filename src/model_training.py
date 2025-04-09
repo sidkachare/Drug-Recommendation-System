@@ -1,21 +1,18 @@
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import pickle
+# model_trainer.py
 
-# Load cleaned dataset
-df = pd.read_csv("data/processed/cleaned_data.csv")
+from sklearn.neighbors import NearestNeighbors
+import joblib
 
-# TF-IDF Vectorization
-tfidf = TfidfVectorizer(stop_words='english')
-features = df['side_effects'] + " " + df['drug_classes']
-tfidf_matrix = tfidf.fit_transform(features)
+class ModelTrainer:
+    def __init__(self, n_neighbors=5):
+        self.n_neighbors = n_neighbors
+        self.model = NearestNeighbors(n_neighbors=self.n_neighbors, algorithm='auto')
 
-# Compute similarity matrix
-similarity_matrix = cosine_similarity(tfidf_matrix)
+    def train(self, X):
+        self.model.fit(X)
+        return self.model
 
-# Save model
-with open("models/drug_recommender.pkl", "wb") as f:
-    pickle.dump((tfidf, similarity_matrix, df), f)
+    def save_model(self, model_path="drug_recommender_model.pkl"):
+        joblib.dump(self.model, model_path)
+        print(f"Model saved to {model_path}")
 
-print("✅ Model Training Completed & Saved")
