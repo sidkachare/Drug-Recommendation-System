@@ -14,5 +14,4 @@ class ModelTrainer:
 
     def save_model(self, model_path="drug_recommender_model.pkl"):
         joblib.dump(self.model, model_path)
-        print(f"Model saved to {model_path}")
 
